@@ -1204,27 +1204,17 @@ function startWelcomeBot() {
     { command: 'stats', description: 'إحصائيات كاملة' },
     { command: 'lastpaid', description: 'آخر معاملات مدفوعة' },
     { command: 'mode', description: 'وضع المعالجة الحالي' },
-    { command: 'batchstatus', description: 'حالة نظام المعالجة' },
-    { command: 'process', description: 'تشغيل المعالجة' },
-    { command: 'pause', description: 'إيقاف المعالجة' },
-    { command: 'resume', description: 'استئناف المعالجة' },
-    { command: 'clearqueue', description: 'إلغاء السحوبات pending' },
     { command: 'retryall', description: 'إعادة محاولة الفاشلة' },
     { command: 'setmax', description: 'تعيين حد الدفع التلقائي' },
     { command: 'setmin', description: 'تعيين الحد الأدنى' },
     { command: 'setrate', description: 'تعيين سعر Bamboo' },
     { command: 'setdaily', description: 'تعيين الحد اليومي' },
     { command: 'setcooldown', description: 'تعيين مدة الانتظار' },
-    { command: 'setmode', description: 'تغيير Batch/Single' },
-    { command: 'setbatchsize', description: 'تعيين حجم الدفعة' },
-    { command: 'setsingledelay', description: 'تعيين تأخير Single' },
     { command: 'userinfo', description: 'معلومات مستخدم' },
     { command: 'banuser', description: 'حظر مستخدم' },
     { command: 'unbanuser', description: 'رفع حظر مستخدم' },
     { command: 'banwallet', description: 'حظر محفظة' },
     { command: 'unwallet', description: 'رفع حظر محفظة' },
-    { command: 'addcoins', description: 'إضافة Coins' },
-    { command: 'addbamboo', description: 'إضافة Bamboo' },
     { command: 'addton', description: 'إضافة TON' },
     { command: 'sendmsg', description: 'إرسال رسالة لمستخدم' },
     { command: 'broadcast', description: 'إرسال رسالة للجميع' },
@@ -1232,12 +1222,9 @@ function startWelcomeBot() {
     { command: 'broadcast_debug', description: 'فحص البث' },
     { command: 'cancel', description: 'إلغاء جلسة الرسائل' },
     { command: 'check_suspicious', description: 'كشف محافظ مشتركة' },
-    { command: 'reject_suspicious', description: 'رفض المشبوهين' },
-    { command: 'check_nodeposit', description: 'سحبوا بدون إيداع' },
     { command: 'stop_all', description: '⛔ إيقاف السحب بالكامل' },
     { command: 'start_all', description: '✅ تشغيل السحب' },
     { command: 'top_referrals', description: 'أفضل 50 — إجمالي الإحالات' },
-    { command: 'top_deposited_referrals', description: 'أفضل 50 — إحالات أودعوا' },
   ]).catch(e => console.log(`⚠️ setMyCommands: ${e.message}`));
 
   const isAdmin = (msg) => isAdminId(msg.chat.id);
@@ -1292,26 +1279,15 @@ function startWelcomeBot() {
       `📊 <b>المعلومات والمراقبة</b>\n` +
       `/balance — رصيد محفظة TON\n` +
       `/queue — حالة كل قوائم السحب\n` +
-      `/lastpaid — آخر 5 معاملات مدفوعة\n` +
-      `/batchstatus — حالة نظام المعالجة\n\n` +
+      `/lastpaid — آخر 5 معاملات مدفوعة\n\n` +
       `⚙️ <b>إعدادات السحب</b>\n` +
       `/setmax [TON] — الحد الأقصى للدفع التلقائي\n` +
       `/setmin [TON] — الحد الأدنى للسحب\n` +
       `/setdaily [رقم] — الحد اليومي للمستخدم\n` +
-      `/setcooldown [ساعات] — مدة الانتظار بعد تجاوز الحد\n` +
-      `/setmode batch|single — تغيير وضع المعالجة\n` +
-      `/setbatchsize [1-4] — حجم الدفعة\n` +
-      `/setsingledelay [ثواني] — تأخير Single\n\n` +
-      `💸 <b>السحوبات والمراجعة</b>\n` +
-      `/process — تشغيل المعالجة يدوياً\n` +
-      `/clearqueue — إلغاء السحوبات pending\n` +
-      `/pause — إيقاف المعالجة\n` +
-      `/resume — استئناف المعالجة\n\n` +
+      `/setcooldown [ساعات] — مدة الانتظار بعد تجاوز الحد\n\n` +
       `👤 <b>إدارة المستخدمين</b>\n` +
       `/banwallet [address] — حظر محفظة\n` +
-      `/unwallet [address] — رفع حظر محفظة\n` +
-      `/addcoins [userId] [كمية] — إضافة Coins\n` +
-      `/addbamboo [userId] [كمية] — إضافة Bamboo\n\n` +
+      `/unwallet [address] — رفع حظر محفظة\n\n` +
       `📨 <b>إرسال رسائل</b>\n` +
       `/sendmsg [userId] — إرسال رسالة لمستخدم\n` +
       `/broadcast — إرسال رسالة للجميع\n` +
@@ -1319,12 +1295,9 @@ function startWelcomeBot() {
       `/broadcast_debug — فحص مسار المستخدمين\n` +
       `/cancel — إلغاء جلسة إرسال الرسائل\n\n` +
       `🕵️ <b>كشف التلاعب</b>\n` +
-      `/check_suspicious — كشف محافظ مشتركة (+3 مستخدمين)\n` +
-      `/reject_suspicious — رفض وحظر المشبوهين\n` +
-      `/check_nodeposit — كشف مستخدمين سحبوا بدون إيداع\n\n` +
+      `/check_suspicious — كشف محافظ مشتركة (+3 مستخدمين)\n\n` +
       `📊 <b>تقارير الإحالات</b>\n` +
-      `/top_referrals — أفضل 50 مستخدم بأكثر إحالات إجمالاً\n` +
-      `/top_deposited_referrals — أفضل 50 مستخدم بأكثر إحالات أودعوا\n\n` +
+      `/top_referrals — أفضل 50 مستخدم بأكثر إحالات إجمالاً\n\n` +
       `🔴 <b>تحكم كامل في النظام</b>\n` +
       `/stop_all — ⛔ إيقاف السحب التلقائي بالكامل\n` +
       `/start_all — ✅ تشغيل السحب مجدداً`
@@ -1414,27 +1387,6 @@ function startWelcomeBot() {
     );
   });
 
-  // ─── /batchstatus ─────────────────────────────────────
-  bot.onText(/\/batchstatus/, async (msg) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    try {
-      const [snapP, snapA, snapM, snapR] = await Promise.all([
-        db.ref("withdrawQueue").orderByChild("status").equalTo("pending").once("value"),
-        db.ref("withdrawQueue").orderByChild("status").equalTo("awaiting_approval").once("value"),
-        db.ref("withdrawQueue").orderByChild("status").equalTo("awaiting_manual").once("value"),
-        db.ref("withdrawQueue").orderByChild("status").equalTo("processing").once("value"),
-      ]);
-      const pendingCount  = snapP.exists() ? Object.keys(snapP.val()).length : 0;
-      const approvalCount = snapA.exists() ? Object.keys(snapA.val()).length : 0;
-      const manualCount   = snapM.exists() ? Object.keys(snapM.val()).length : 0;
-      const processingCount = snapR.exists() ? Object.keys(snapR.val()).length : 0;
-      const modeIcon = PROCESSING_MODE === 'batch' ? '📦' : '💸';
-      await adminReply(bot, msg.chat.id,
-        `${modeIcon} <b>حالة نظام المعالجة</b>\n\n🔀 الوضع: <b>${PROCESSING_MODE.toUpperCase()}</b>\n🔢 حجم الدفعة: <b>${BATCH_SIZE}</b>\n⏱ Flush كل: <b>${BATCH_FLUSH_SECONDS}s</b>\n⏳ تأخير بين دفعات: <b>${BATCH_BETWEEN_DELAY/1000}s</b>\n💸 تأخير Single: <b>${SINGLE_DELAY_MS/1000}s</b>\n\n📋 Pending: <b>${pendingCount}</b>\n📝 Awaiting manual: <b>${manualCount}</b>\n⏳ Awaiting approval/daily: <b>${approvalCount}</b>\n🔄 Processing: <b>${processingCount}</b>\n🔄 Processing now: <b>${isProcessing ? 'نعم' : 'لا'}</b>\n⏸ Paused: <b>${systemPaused ? 'نعم ⏸' : 'لا ✅'}</b>\n🔒 In processingQueue: <b>${processingQueue.size}</b>\n\n📅 الحد اليومي: <b>${DAILY_LIMIT}</b> سحوبات\n⏰ Cooldown: <b>${DAILY_COOLDOWN_HOURS}</b> ساعة\n💡 اليدوي يظهر في /pending_wd`
-      );
-    } catch(e) { await adminReply(bot, msg.chat.id, `❌ ${e.message}`); }
-  });
-
   // ─── /stats ───────────────────────────────────────────
   bot.onText(/\/stats/, async (msg) => {
     if (!isAdmin(msg)) { await unauth(msg); return; }
@@ -1516,49 +1468,6 @@ function startWelcomeBot() {
     if (isNaN(v) || v <= 0) { await adminReply(bot, msg.chat.id, "❌ رقم غير صحيح"); return; }
     DAILY_COOLDOWN_HOURS = v;
     await adminReply(bot, msg.chat.id, `✅ مدة الانتظار: <b>${v}</b> ساعة بعد تجاوز الحد اليومي`);
-  });
-
-  // ─── /setmode ─────────────────────────────────────────
-  bot.onText(/\/setmode (.+)/, async (msg, match) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    const m = match[1].trim().toLowerCase();
-    if (m !== 'batch' && m !== 'single') { await adminReply(bot, msg.chat.id, "❌ الوضع يجب أن يكون: <b>batch</b> أو <b>single</b>"); return; }
-    PROCESSING_MODE = m;
-    const icon = m === 'batch' ? '📦' : '💸';
-    await adminReply(bot, msg.chat.id, `${icon} تم التبديل إلى وضع <b>${m.toUpperCase()}</b>\n\n` + (m === 'batch' ? `يجمع حتى <b>${BATCH_SIZE}</b> سحوبات في معاملة واحدة` : `يرسل كل سحب منفرداً بتأخير <b>${SINGLE_DELAY_MS/1000}s</b>`));
-  });
-
-  // ─── /setbatchsize ────────────────────────────────────
-  bot.onText(/\/setbatchsize (.+)/, async (msg, match) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    const v = parseInt(match[1]);
-    if (isNaN(v) || v < 1 || v > 4) { await adminReply(bot, msg.chat.id, "❌ حجم الدفعة يجب أن يكون بين 1 و4"); return; }
-    BATCH_SIZE = v;
-    await adminReply(bot, msg.chat.id, `✅ حجم الدفعة: <b>${v}</b> سحوبات في المعاملة الواحدة`);
-  });
-
-  // ─── /setsingledelay ──────────────────────────────────
-  bot.onText(/\/setsingledelay (.+)/, async (msg, match) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    const v = parseFloat(match[1]);
-    if (isNaN(v) || v < 1) { await adminReply(bot, msg.chat.id, "❌ رقم غير صحيح (ثانية واحدة على الأقل)"); return; }
-    SINGLE_DELAY_MS = v * 1000;
-    await adminReply(bot, msg.chat.id, `✅ تأخير Single: <b>${v}</b> ثانية بين كل سحب`);
-  });
-
-  // ─── /clearqueue ──────────────────────────────────────
-  bot.onText(/\/clearqueue/, async (msg) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    try {
-      const snap  = await db.ref("withdrawQueue").orderByChild("status").equalTo("pending").once("value");
-      const items = snap.val();
-      if (!items) { await adminReply(bot, msg.chat.id, "📭 لا توجد سحوبات pending"); return; }
-      const count = Object.keys(items).length;
-      const updates = {};
-      Object.keys(items).forEach(id => { updates[`${id}/status`] = "cancelled"; updates[`${id}/updatedAt`] = Date.now(); updates[`${id}/holdReason`] = "إلغاء جماعي من الأدمن"; });
-      await db.ref("withdrawQueue").update(updates);
-      await adminReply(bot, msg.chat.id, `🗑 تم إلغاء <b>${count}</b> سحب من القائمة`);
-    } catch(e) { await adminReply(bot, msg.chat.id, `❌ ${e.message}`); }
   });
 
   // ─── /retryall ────────────────────────────────────────
@@ -1729,62 +1638,6 @@ function startWelcomeBot() {
       else           keyboard.push([{ text: "✅ رفع الحظر",     callback_data: `unban_user:${userId}` }]);
 
       await adminReply(bot, msg.chat.id, text, { reply_markup: { inline_keyboard: keyboard }, disable_web_page_preview: false });
-    } catch(e) { await adminReply(bot, msg.chat.id, `❌ ${e.message}`); }
-  });
-
-  // ─── /addcoins [userId] [amount] ─────────────────────
-  bot.onText(/\/addcoins (.+)/, async (msg, match) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    const parts  = match[1].trim().split(/\s+/);
-    const userId = parts[0];
-    const amount = parseInt(parts[1]);
-    if (!userId || isNaN(amount) || amount <= 0) {
-      await adminReply(bot, msg.chat.id, `❌ الاستخدام: /addcoins [userId] [المبلغ]\nمثال: /addcoins 123456789 5000`);
-      return;
-    }
-    try {
-      const userSnap    = await db.ref(`users/${userId}`).once("value");
-      if (!userSnap.exists()) { await adminReply(bot, msg.chat.id, `❌ المستخدم <code>${userId}</code> غير موجود`); return; }
-      const userData    = userSnap.val() || {};
-      const currentCoins = Number(userData.coins || 0);
-      const newCoins     = currentCoins + amount;
-      await db.ref(`users/${userId}`).update({ coins: newCoins, updatedAt: Date.now() });
-      await adminReply(bot, msg.chat.id,
-        `✅ <b>تمت إضافة Coins بنجاح</b>\n\n` +
-        `👤 User: <code>${userId}</code>\n` +
-        `➕ مضاف: <b>${amount.toLocaleString()} Coins</b>\n` +
-        `📊 الرصيد القديم: <b>${currentCoins.toLocaleString()}</b>\n` +
-        `💰 الرصيد الجديد: <b>${newCoins.toLocaleString()} Coins</b>`
-      );
-      console.log(`✅ Admin added ${amount} coins → user ${userId} (${currentCoins} → ${newCoins})`);
-    } catch(e) { await adminReply(bot, msg.chat.id, `❌ ${e.message}`); }
-  });
-
-  // ─── /addbamboo [userId] [amount] ────────────────────
-  bot.onText(/\/addbamboo (.+)/, async (msg, match) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    const parts  = match[1].trim().split(/\s+/);
-    const userId = parts[0];
-    const amount = parseInt(parts[1]);
-    if (!userId || isNaN(amount) || amount <= 0) {
-      await adminReply(bot, msg.chat.id, `❌ الاستخدام: /addbamboo [userId] [المبلغ]\nمثال: /addbamboo 123456789 50000`);
-      return;
-    }
-    try {
-      const userSnap      = await db.ref(`users/${userId}`).once("value");
-      if (!userSnap.exists()) { await adminReply(bot, msg.chat.id, `❌ المستخدم <code>${userId}</code> غير موجود`); return; }
-      const userData      = userSnap.val() || {};
-      const currentBamboo = Number(userData.bamboo || 0);
-      const newBamboo     = currentBamboo + amount;
-      await db.ref(`users/${userId}`).update({ bamboo: newBamboo, updatedAt: Date.now() });
-      await adminReply(bot, msg.chat.id,
-        `✅ <b>تمت إضافة Bamboo بنجاح</b>\n\n` +
-        `👤 User: <code>${userId}</code>\n` +
-        `➕ مضاف: <b>${amount.toLocaleString()} 🎍 Bamboo</b>\n` +
-        `📊 الرصيد القديم: <b>${currentBamboo.toLocaleString()}</b>\n` +
-        `🎍 الرصيد الجديد: <b>${newBamboo.toLocaleString()} Bamboo</b>`
-      );
-      console.log(`✅ Admin added ${amount} bamboo → user ${userId} (${currentBamboo} → ${newBamboo})`);
     } catch(e) { await adminReply(bot, msg.chat.id, `❌ ${e.message}`); }
   });
 
@@ -1964,62 +1817,6 @@ function startWelcomeBot() {
   });
 
 
-    // ─── /check_nodeposit ─────────────────────────────────
-  bot.onText(/\/check_nodeposit/, async (msg) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    try {
-      await adminReply(bot, msg.chat.id, "🔍 جاري فحص جميع السحوبات المدفوعة...");
-      const snap  = await db.ref("withdrawQueue").orderByChild("status").equalTo("paid").once("value");
-      const items = snap.val();
-      if (!items) { await adminReply(bot, msg.chat.id, "📭 لا توجد سحوبات مدفوعة"); return; }
-
-      const userMap = {};
-      Object.values(items).forEach(d => {
-        if (!d.userId) return;
-        if (!userMap[d.userId]) userMap[d.userId] = { totalPaid: 0, count: 0 };
-        userMap[d.userId].totalPaid += roundAmount(d.ton);
-        userMap[d.userId].count++;
-      });
-
-      await adminReply(bot, msg.chat.id, `👥 ${Object.keys(userMap).length} مستخدم فريد — جاري فحص الإيداعات...`);
-
-      const noDepositUsers = [];
-      for (const [userId, info] of Object.entries(userMap)) {
-        try {
-          const [flagSnap, depositsSnap] = await Promise.all([
-            db.ref(`users/${userId}/hasDeposited`).once("value"),
-            db.ref(`users/${userId}/deposits`).once("value"),
-          ]);
-          const flagTrue   = flagSnap.val() === true;
-          const depositsData = depositsSnap.val() || {};
-          const confirmed  = Object.values(depositsData).filter(d => !d.status || d.status !== 'pending');
-          const hasDeposit = flagTrue || confirmed.length > 0;
-          if (!hasDeposit) noDepositUsers.push({ userId, ...info });
-        } catch (e) { /* تجاهل الأخطاء الفردية */ }
-      }
-
-      if (!noDepositUsers.length) {
-        await adminReply(bot, msg.chat.id, "✅ <b>لا يوجد مستخدمون سحبوا بدون إيداع</b>");
-        return;
-      }
-
-      noDepositUsers.sort((a, b) => b.totalPaid - a.totalPaid);
-      let text = `🚨 <b>مستخدمون سحبوا بدون إيداع (${noDepositUsers.length})</b>\n${'━'.repeat(30)}\n\n`;
-      const CHUNK = 20;
-      for (let i = 0; i < noDepositUsers.length; i += CHUNK) {
-        const chunk = noDepositUsers.slice(i, i + CHUNK);
-        text = i === 0
-          ? `🚨 <b>مستخدمون سحبوا بدون إيداع (${noDepositUsers.length})</b>\n${'━'.repeat(30)}\n\n`
-          : `🚨 <b>تابع... (${i + 1}–${Math.min(i + CHUNK, noDepositUsers.length)})</b>\n\n`;
-        chunk.forEach((u, idx) => {
-          text += `${i + idx + 1}. 👤 <code>${u.userId}</code> — <b>${u.totalPaid.toFixed(3)} TON</b> (${u.count} سحب)\n`;
-        });
-        await adminReply(bot, msg.chat.id, text);
-        if (i + CHUNK < noDepositUsers.length) await new Promise(r => setTimeout(r, 400));
-      }
-    } catch(e) { await adminReply(bot, msg.chat.id, `❌ ${e.message}`); }
-  });
-
   // ─── /top_referrals — أفضل 50 من حيث إجمالي الإحالات ───────────────────
   bot.onText(/\/top_referrals/, async (msg) => {
     if (!isAdmin(msg)) { await unauth(msg); return; }
@@ -2103,90 +1900,6 @@ function startWelcomeBot() {
     } catch(e) { await adminReply(bot, msg.chat.id, `❌ ${e.message}`); }
   });
 
-  // ─── /top_deposited_referrals — أفضل 50 من حيث الإحالات اللي أودعوا ────
-  bot.onText(/\/top_deposited_referrals/, async (msg) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    try {
-      await adminReply(bot, msg.chat.id, "🔍 جاري جلب بيانات الإحالات النشطة... قد يستغرق هذا وقتاً");
-
-      const usersSnap = await db.ref("users").once("value");
-      const allUsers  = usersSnap.val() || {};
-
-      await adminReply(bot, msg.chat.id, `👥 تم جلب ${Object.keys(allUsers).length} مستخدم — جاري الحساب...`);
-
-      const userStats = [];
-      for (const [userId, userData] of Object.entries(allUsers)) {
-        const referrals  = userData.referrals  || {};
-        const deposits   = userData.deposits   || {};
-        const wdHistory  = userData.wdHistory  || {};
-
-        const totalReferrals = Object.keys(referrals).length;
-        if (totalReferrals === 0) continue;
-
-        // حساب الإحالات التي أودعت
-        let depositedReferrals = 0;
-        for (const refId of Object.keys(referrals)) {
-          try {
-            const refSnap = await db.ref(`users/${refId}/hasDeposited`).once("value");
-            if (refSnap.val() === true) { depositedReferrals++; continue; }
-            const refDepSnap = await db.ref(`users/${refId}/deposits`).once("value");
-            const refDeps = refDepSnap.val() || {};
-            const confirmed = Object.values(refDeps).filter(d => !d.status || d.status !== 'pending');
-            if (confirmed.length > 0) depositedReferrals++;
-          } catch(e) { /* تجاهل */ }
-        }
-
-        if (depositedReferrals === 0) continue;
-
-        // إجمالي الإيداعات
-        const confirmedDeps = Object.values(deposits).filter(d => !d.status || d.status !== 'pending');
-        const totalDepositTon = confirmedDeps.reduce((s, d) => s + (Number(d.amount) || 0), 0);
-
-        // إجمالي السحوبات
-        const paidWds = Object.values(wdHistory).filter(w => w.status === 'paid');
-        const totalWithdrawTon = paidWds.reduce((s, w) => s + (Number(w.sentAmount) || 0), 0);
-
-        userStats.push({
-          userId,
-          totalReferrals,
-          depositedReferrals,
-          totalDepositTon,
-          totalWithdrawTon,
-          paidWdCount: paidWds.length,
-        });
-      }
-
-      // ترتيب حسب عدد الإحالات اللي أودعوا
-      userStats.sort((a, b) => b.depositedReferrals - a.depositedReferrals);
-      const top50 = userStats.slice(0, 50);
-
-      if (!top50.length) {
-        await adminReply(bot, msg.chat.id, "📭 لا يوجد مستخدمون لديهم إحالات نشطة أودعت");
-        return;
-      }
-
-      const CHUNK = 10;
-      for (let i = 0; i < top50.length; i += CHUNK) {
-        const chunk = top50.slice(i, i + CHUNK);
-        let text = i === 0
-          ? `🏆 <b>أفضل 50 مستخدم — الإحالات النشطة (أودعوا)</b>\n${'━'.repeat(32)}\n\n`
-          : `🏆 <b>تابع... (${i + 1}–${Math.min(i + CHUNK, top50.length)})</b>\n\n`;
-
-        chunk.forEach((u, idx) => {
-          text +=
-            `<b>${i + idx + 1}.</b> 👤 <code>${escapeHtml(u.userId)}</code>\n` +
-            `   ✅ إحالات أودعوا: <b>${u.depositedReferrals}</b>\n` +
-            `   👥 إجمالي إحالاته: <b>${u.totalReferrals}</b>\n` +
-            `   📥 إيداعاته: <b>${u.totalDepositTon.toFixed(3)} TON</b>\n` +
-            `   📤 سحوباته: <b>${u.totalWithdrawTon.toFixed(3)} TON</b> (${u.paidWdCount} سحب)\n\n`;
-        });
-
-        await adminReply(bot, msg.chat.id, text);
-        if (i + CHUNK < top50.length) await new Promise(r => setTimeout(r, 400));
-      }
-    } catch(e) { await adminReply(bot, msg.chat.id, `❌ ${e.message}`); }
-  });
-
   bot.onText(/\/lastpaid/, async (msg) => {
     if (!isAdmin(msg)) { await unauth(msg); return; }
     try {
@@ -2219,19 +1932,6 @@ function startWelcomeBot() {
     } catch(e) { await adminReply(bot, msg.chat.id, `❌ ${e.message}`); }
   });
 
-  bot.onText(/\/pause/, async (msg) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    systemPaused = true;
-    await adminReply(bot, msg.chat.id, "⏸ System paused");
-  });
-
-  bot.onText(/\/resume/, async (msg) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    systemPaused = false;
-    await adminReply(bot, msg.chat.id, "▶️ System resumed");
-    setTimeout(() => processPendingWithdrawals(), 1000);
-  });
-
   // ─── /stop_all — إيقاف السحب بالكامل ──────────
   bot.onText(/\/stop_all/, async (msg) => {
     if (!isAdmin(msg)) { await unauth(msg); return; }
@@ -2262,13 +1962,6 @@ function startWelcomeBot() {
     setTimeout(() => processPendingWithdrawals(), 1000);
   });
 
-  // ─── /process ─────────────────────────────────────────
-  bot.onText(/\/process/, async (msg) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    await adminReply(bot, msg.chat.id, "🔄 Starting batch processing...");
-    setTimeout(() => processPendingWithdrawals(), 500);
-  });
-
   // ─── /check_suspicious ────────────────────────────────
   bot.onText(/\/check_suspicious/, async (msg) => {
     if (!isAdmin(msg)) { await unauth(msg); return; }
@@ -2296,62 +1989,11 @@ function startWelcomeBot() {
         const userList = [...data.userIds].join(', ');
         text += `🔴 <b>محفظة ${i + 1}</b>\n📬 <code>${addr}</code>\n👥 عدد المستخدمين: <b>${data.userIds.size}</b>\n🆔 المستخدمون: <code>${userList}</code>\n📋 طلبات معلقة: <b>${data.withdrawIds.length}</b>\n💰 إجمالي مطلوب: <b>${data.totalTon.toFixed(3)} TON</b>\n\n`;
         if (text.length > 3000 && i < suspicious.length - 1) {
-          await adminReply(bot, msg.chat.id, text, { reply_markup: { inline_keyboard: [[{ text: "🚫 رفض جميع المشبوهين", callback_data: "reject_all_suspicious" }]] } });
+          await adminReply(bot, msg.chat.id, text);
           text = `🚨 <b>تابع — محافظ مشبوهة</b>\n\n`;
         }
       }
-      text += `${'━'.repeat(32)}\n⚡ استخدم /reject_suspicious لرفض جميع طلباتهم`;
-      await adminReply(bot, msg.chat.id, text, { reply_markup: { inline_keyboard: [[{ text: "🚫 رفض جميع المشبوهين الآن", callback_data: "reject_all_suspicious" }]] } });
-    } catch (e) { await adminReply(bot, msg.chat.id, `❌ خطأ: ${e.message}`); }
-  });
-
-  // ─── /reject_suspicious ───────────────────────────────
-  bot.onText(/\/reject_suspicious/, async (msg) => {
-    if (!isAdmin(msg)) { await unauth(msg); return; }
-    try {
-      await adminReply(bot, msg.chat.id, "🔍 جاري تحليل البيانات وتنفيذ الرفض...");
-      const snap  = await db.ref("withdrawQueue").once("value");
-      const items = snap.val();
-      if (!items) { await adminReply(bot, msg.chat.id, "📭 لا توجد سحوبات"); return; }
-      const walletUsers = {};
-      Object.entries(items).forEach(([id, d]) => {
-        const status = d.status || '';
-        if (!['pending', 'awaiting_approval', 'awaiting_manual', 'processing'].includes(status)) return;
-        if (!d.address || !d.userId) return;
-        const addr = d.address;
-        if (!walletUsers[addr]) walletUsers[addr] = { userIds: new Set(), entries: [] };
-        walletUsers[addr].userIds.add(String(d.userId));
-        walletUsers[addr].entries.push({ id, ...d });
-      });
-      const suspiciousUserIds = new Set();
-      const suspiciousWallets = new Set();
-      Object.entries(walletUsers).forEach(([addr, v]) => {
-        if (v.userIds.size > 3) { suspiciousWallets.add(addr); v.userIds.forEach(uid => suspiciousUserIds.add(uid)); }
-      });
-      if (!suspiciousUserIds.size) { await adminReply(bot, msg.chat.id, "✅ لا يوجد مستخدمون مشبوهون للرفض"); return; }
-      let rejectedCount = 0;
-      const rejectPromises = [];
-      Object.entries(items).forEach(([id, d]) => {
-        const status = d.status || '';
-        if (!['pending', 'awaiting_approval', 'awaiting_manual', 'processing'].includes(status)) return;
-        if (!suspiciousUserIds.has(String(d.userId))) return;
-        rejectPromises.push(
-          db.ref(`withdrawQueue/${id}`).update({ status: "cancelled", updatedAt: Date.now(), holdReason: `مرفوض تلقائياً — تعدد حسابات` }).then(async () => {
-            if (d.userId && d.wdId) await db.ref(`users/${d.userId}/wdHistory/${d.wdId}`).update({ status: "cancelled", updatedAt: Date.now() }).catch(() => {});
-            rejectedCount++;
-          }).catch(() => {})
-        );
-      });
-      await Promise.all(rejectPromises);
-      const banPromises = [];
-      suspiciousWallets.forEach(addr => {
-        const key = addr.replace(/[.$#[\]/]/g, '_');
-        banPromises.push(db.ref(`bannedWallets/${key}`).set({ address: addr, reason: "تعدد حسابات — كشف تلقائي", bannedAt: Date.now(), userCount: walletUsers[addr]?.userIds.size || 0 }).catch(() => {}));
-      });
-      await Promise.all(banPromises);
-      await adminReply(bot, msg.chat.id,
-        `✅ <b>تم تنفيذ الرفض الجماعي</b>\n\n${'━'.repeat(30)}\n🚫 طلبات مرفوضة: <b>${rejectedCount}</b>\n👥 مستخدمون متأثرون: <b>${suspiciousUserIds.size}</b>\n📬 محافظ محظورة: <b>${suspiciousWallets.size}</b>\n${'━'.repeat(30)}\n\n🆔 المستخدمون: <code>${[...suspiciousUserIds].join(', ')}</code>`
-      );
+      await adminReply(bot, msg.chat.id, text);
     } catch (e) { await adminReply(bot, msg.chat.id, `❌ خطأ: ${e.message}`); }
   });
 
@@ -2671,14 +2313,6 @@ function startWelcomeBot() {
   });
 
   // ─── Callbacks ────────────────────────────────────────
-  bot.on('callback_query', async (query) => {
-    if (!isAdminId(query.message.chat.id)) return;
-    if (query.data === 'reject_all_suspicious') {
-      await bot.answerCallbackQuery(query.id, { text: "🔄 جاري تنفيذ الرفض..." });
-      await bot.sendMessage(ADMIN_CHAT_ID, "/reject_suspicious");
-    }
-  });
-
   bot.on('callback_query', async (query) => {
     if (!isAdminId(query.message.chat.id)) return;
     const data   = query.data || '';
