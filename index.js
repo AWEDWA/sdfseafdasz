@@ -52,7 +52,16 @@ let systemPaused          = false;
 // 🔹 تحكم في نظام السحب والإيداع
 // ==========================
 let WITHDRAWAL_ENABLED = true;
-let DEPOSIT_ENABLED    = true;
+let DEPOSIT_ENABLED    = false; // 🔒 خاصية فحص الإيداعات معطّلة — البوت يدفع السحوبات فقط
+
+// ==========================
+// 🔹 إعدادات البوت / القناة / الروابط
+// ==========================
+const BOT_NAME                = "GRAMMONEYM";
+const BOT_URL                 = "https://t.me/GRAMMONEYMbot?startapp";
+const WITHDRAWAL_CHANNEL_URL  = "https://t.me/mjsjsjjsjisj";
+const WITHDRAWAL_CHANNEL_ID   = "@mjsjsjjsjisj"; // 👈 لو القناة خاصة استبدلها بالـ chat id الرقمي (مثال: -1001234567890)
+const WELCOME_IMAGE_URL       = "https://i.ibb.co/TMPJYfjH/Chat-GPT-Image-Aug-8-2026-03-56-45-AM.png";
 
 // ==========================
 // 🔹 دالة تقريب المبلغ
@@ -441,31 +450,51 @@ async function confirmBatchTransaction(expectedSeqno, maxWaitMs = 120000) {
 // ==========================
 // 🔹 إشعار المستخدم بالسحب
 // ==========================
+function maskUserId(userId) {
+  const uid = String(userId || 'Unknown');
+  if (uid.length <= 4) return uid;
+  const start = Math.ceil(uid.length / 3);
+  const end   = Math.floor(uid.length / 4);
+  return uid.substring(0, start) + '***' + uid.substring(uid.length - end);
+}
+
+// ==========================
+// 🔹 رسالة نجاح السحب الموحّدة (تُستخدم للمستخدم وللقناة)
+// ==========================
+function buildPayoutCaption(userId, amountTon) {
+  const masked = maskUserId(userId);
+  return (
+    `💎 <b>New TON Payout</b>\n\n` +
+    `🎉 A new withdrawal has been successfully completed!\n\n` +
+    `👤 <b>User:</b> <code>${masked}</code>\n` +
+    `💰 <b>Amount:</b> ${amountTon.toFixed(4)} TON\n` +
+    `✅ <b>Status:</b> Paid\n\n` +
+    `⚡ The payout was sent directly to the user's TON Wallet.\n` +
+    `🔗 Verified on-chain • Fast &amp; Transparent\n\n` +
+    `🏆 Another successful payout from GRAM!`
+  );
+}
+
+function buildPayoutKeyboard(txLink) {
+  const keys = [];
+  if (txLink) keys.push({ text: "🔍 View Transaction", url: txLink });
+  keys.push({ text: "🚀 Open Bot", url: BOT_URL });
+  return { inline_keyboard: [keys] };
+}
+
 async function sendUserNotification(chatId, amountTon, amountCoins, txHash) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   if (!botToken || !chatId) return false;
   const txLink  = txHash ? `https://tonscan.org/tx/${encodeURIComponent(txHash)}` : null;
-  const caption =
-    `🔥 <b>RASEENRACING • WITHDRAW SUCCESSFUL</b> 🔥\n` +
-    `Your TON has left the garage and is on the way to your wallet 🏍️💸\n\n` +
-    `━━━━━━━━━━━━━━━━━━\n` +
-    `💎 <b>Withdraw Amount:</b> ${amountTon.toFixed(6)} TON\n` +
-    `━━━━━━━━━━━━━━━━━━\n\n` +
-    `✅ Transaction completed successfully\n` +
-    `⚡ Funds have been sent to your TON wallet\n\n` +
-    `Keep racing. Keep earning. Keep winning 🏁🔥\n\n` +
-    (txLink ? `🔗 <a href="${txLink}">View Transaction</a>` : ``);
-  const keys = [];
-  if (txLink) keys.push({ text: "🔗 View TX", url: txLink });
-  keys.push({ text: "🚀 Open", url: "https://t.me/RaseenRacing_bot/app?startapp=" });
+  const caption = buildPayoutCaption(chatId, amountTon);
   try {
-    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: chatId,
-        photo: "https://res.cloudinary.com/dktppfipy/image/upload/v1779060536/withdraw_amyrsy.jpg",
-        caption, parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: [keys] }
+        text: caption,
+        parse_mode: 'HTML',
+        reply_markup: buildPayoutKeyboard(txLink)
       }),
     });
     const data = await res.json();
@@ -475,83 +504,32 @@ async function sendUserNotification(chatId, amountTon, amountCoins, txHash) {
 }
 
 // ==========================
-// 🔹 إشعار مجموعة المدفوعات
+// 🔹 إشعار قناة السحوبات
 // ==========================
-
-// إعدادات المجموعة الجديدة
-const GROUP_CHAT_ID        = "@RaseenRacing_chat";   // المجموعة العامة
-const GROUP_TOPIC_UNDER    = 2;                       // قسم السحوبات أقل من 0.1 تون
-const GROUP_TOPIC_OVER     = 3;                       // قسم السحوبات أكثر من 0.1 تون
-const PHOTO_UNDER_0_1      = "https://res.cloudinary.com/dktppfipy/image/upload/v1779064664/nder0.1_lk6y4h.jpg";
-const PHOTO_OVER_0_1       = "https://res.cloudinary.com/dktppfipy/image/upload/v1779064664/over_0.1_brou8i.jpg";
-const THRESHOLD_TON        = 0.1;                     // حد التصنيف
-
-function maskUserId(userId) {
-  const uid = String(userId || 'Unknown');
-  if (uid.length <= 4) return uid;
-  const start = Math.ceil(uid.length / 3);
-  const end   = Math.floor(uid.length / 4);
-  return uid.substring(0, start) + '***' + uid.substring(uid.length - end);
-}
-
 async function sendChannelNotification(items, txHash) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   if (!botToken) return;
 
-  const txLink   = txHash ? `https://tonscan.org/tx/${encodeURIComponent(txHash)}` : null;
-  const totalTON = items.reduce((s, i) => s + i.roundedAmount, 0);
-  const isSingle = items.length === 1;
+  const txLink = txHash ? `https://tonscan.org/tx/${encodeURIComponent(txHash)}` : null;
 
-  // سطر أو أسطر الـ Rider IDs
-  const riderLines = items.map(item => {
-    const masked = maskUserId(item.userId);
-    return `👤 Rider ID: <code>${masked}</code>`;
-  }).join('\n');
-
-  // مبلغ السحب
-  const amountLine = isSingle
-    ? `💰 Withdrawal Amount: <b>${items[0].roundedAmount.toFixed(4)} TON</b>`
-    : `💰 Withdrawal Amount: <b>${totalTON.toFixed(4)} TON</b>`;
-
-  // Payment Statistics فقط للبادج (أكثر من مستخدم)
-  const statsBlock = isSingle ? `` :
-    `\n📊 <b>Payment Statistics</b>\n` +
-    `• Successful Payments: <b>${items.length}</b>\n` +
-    `• Total Distributed: <b>${totalTON.toFixed(4)} TON</b>\n`;
-
-  const caption =
-    `🏍️💎 RaseenRacing has successfully processed a new TON withdrawal.\n` +
-    `A rider has received their payout directly to their TON\n\n` +
-    `${riderLines}\n` +
-    `${amountLine}` +
-    (statsBlock ? `\n${statsBlock}` : ``);
-
-  const keys = [];
-  if (txLink) keys.push({ text: "🔗 View TX", url: txLink });
-  keys.push({ text: "🚀 Open", url: "https://t.me/RaseenRacing_bot/app?startapp=" });
-
-  // تحديد القسم والصورة بناءً على إجمالي المبلغ
-  const isUnder  = totalTON < THRESHOLD_TON;
-  const topicId  = isUnder ? GROUP_TOPIC_UNDER : GROUP_TOPIC_OVER;
-  const photoUrl = isUnder ? PHOTO_UNDER_0_1   : PHOTO_OVER_0_1;
-  const label    = isUnder ? "< 0.1 TON" : ">= 0.1 TON";
-
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id:           GROUP_CHAT_ID,
-        message_thread_id: topicId,
-        photo:             photoUrl,
-        caption,
-        parse_mode:        'HTML',
-        reply_markup:      { inline_keyboard: [keys] }
-      }),
-    });
-    const d = await res.json();
-    if (d.ok) console.log(`✅ Group notified (${label}) — ${items.length} users | topic: ${topicId}`);
-    else console.log(`❌ Group notification failed: ${d.description}`);
-  } catch (e) { console.log(`❌ sendChannelNotification: ${e.message}`); }
+  // كل عنصر في الدفعة يُرسل كرسالة منفصلة بنفس تنسيق رسالة المستخدم
+  for (const item of items) {
+    const caption = buildPayoutCaption(item.userId, item.roundedAmount);
+    try {
+      const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id:      WITHDRAWAL_CHANNEL_ID,
+          text:         caption,
+          parse_mode:   'HTML',
+          reply_markup: buildPayoutKeyboard(txLink)
+        }),
+      });
+      const d = await res.json();
+      if (d.ok) console.log(`✅ Channel notified — user ${item.userId}`);
+      else console.log(`❌ Channel notification failed: ${d.description}`);
+    } catch (e) { console.log(`❌ sendChannelNotification: ${e.message}`); }
+  }
 }
 
 // ==========================
@@ -782,7 +760,7 @@ async function sendBatchTransfer(items, attempt = 0) {
           to: item.data.address,
           value: toNano(item.roundedAmount.toFixed(3)),
           bounce: false,
-          ...(needsComment ? { body: 'RaseenRacing_bot' } : {})
+          ...(needsComment ? { body: 'GRAMMONEYMbot' } : {})
         });
         validMessages.push({ item, msg });
       } catch (addrErr) {
@@ -919,7 +897,7 @@ async function sendSingleTransfer(item, attempt = 0) {
     const seqno = await contract.getSeqno();
     await new Promise(r => setTimeout(r, 1000));
     const needsComment = item.roundedAmount > 0.1;
-    await contract.sendTransfer({ secretKey: key.secretKey, seqno, messages: [internal({ to: item.data.address, value: toNano(item.roundedAmount.toFixed(3)), bounce: false, ...(needsComment ? { body: 'RaseenRacing_bot' } : {}) })] });
+    await contract.sendTransfer({ secretKey: key.secretKey, seqno, messages: [internal({ to: item.data.address, value: toNano(item.roundedAmount.toFixed(3)), bounce: false, ...(needsComment ? { body: 'GRAMMONEYMbot' } : {}) })] });
     console.log(`📤 Single submitted — seqno: ${seqno} | attempt: ${attempt + 1}`);
 
     const confirmation = await confirmBatchTransaction(seqno, 90000);
@@ -1084,7 +1062,7 @@ async function checkDeposits() {
       if (!comment) continue;
 
       // استخراج userId من الكومنت — يدعم الشكلين:
-      //   الجديد: {"user_id":"7278991674","TG":"RaseenRacing_bot"}
+      //   الجديد: {"user_id":"7278991674","TG":"GRAMMONEYMbot"}
       //   القديم: 7278991674
       let userId = null;
       if (comment.startsWith('{')) {
@@ -1169,7 +1147,7 @@ async function checkDeposits() {
           caption:    depositCaption,
           parse_mode: "HTML",
           reply_markup: {
-            inline_keyboard: [[{ text: "🚀 Open", url: "https://t.me/RaseenRacing_bot/app?startapp=" }]]
+            inline_keyboard: [[{ text: "🚀 Open", url: BOT_URL }]]
           }
         })
       });
@@ -1256,8 +1234,8 @@ function startWelcomeBot() {
     { command: 'check_suspicious', description: 'كشف محافظ مشتركة' },
     { command: 'reject_suspicious', description: 'رفض المشبوهين' },
     { command: 'check_nodeposit', description: 'سحبوا بدون إيداع' },
-    { command: 'stop_all', description: '⛔ إيقاف الإيداع والسحب بالكامل' },
-    { command: 'start_all', description: '✅ تشغيل الإيداع والسحب' },
+    { command: 'stop_all', description: '⛔ إيقاف السحب بالكامل' },
+    { command: 'start_all', description: '✅ تشغيل السحب' },
     { command: 'top_referrals', description: 'أفضل 50 — إجمالي الإحالات' },
     { command: 'top_deposited_referrals', description: 'أفضل 50 — إحالات أودعوا' },
   ]).catch(e => console.log(`⚠️ setMyCommands: ${e.message}`));
@@ -1269,27 +1247,29 @@ function startWelcomeBot() {
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
     console.log(`👋 /start: ${chatId}`);
+    const displayName = escapeHtml(msg.from?.first_name || msg.from?.username || 'صديقنا');
     const caption =
-      `🏍️🔥 <b>Welcome to RaseenRacing!</b>\n\n` +
-      `Race REAL players in intense 3D PvP battles and win TON rewards 💎\n\n` +
-      `🏁 Upgrade your bike\n` +
-      `⛏️ Mine daily TON rewards\n` +
-      `👥 Invite friends &amp; earn commissions\n` +
-      `💰 Withdraw your earnings anytime\n\n` +
-      `🚀 Start now and become a racing legend!`;
+      `🪙 <b>Welcome to ${BOT_NAME}, ${displayName}!</b>\n\n` +
+      `💵 Complete tasks. Earn USDT. Get rewarded in GRAM.\n\n` +
+      `✔️ <b>Complete Daily Tasks</b>\n` +
+      `Earn rewards instantly by completing simple tasks.\n\n` +
+      `⭐️ <b>Invite Friends</b>\n` +
+      `Earn from your referrals and keep receiving rewards from their activity.\n\n` +
+      `💎 <b>Fast &amp; Easy Withdrawals</b>\n` +
+      `Withdraw your earnings directly to your TON wallet.\n\n` +
+      `⚡ Fast payouts. Transparent rewards. Every payment is settled on-chain and can be publicly verified.\n\n` +
+      `🎮 Ready to start earning? Tap the button below to open the app and start completing tasks.\n\n` +
+      `📢 Referral and payout updates will be sent directly here.`;
     try {
       await bot.sendPhoto(chatId,
-        "https://res.cloudinary.com/dktppfipy/image/upload/v1779047977/image_potboz.jpg",
+        WELCOME_IMAGE_URL,
         {
           caption,
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
-              [{ text: "🚀 Open", url: "https://t.me/RaseenRacing_bot/app?startapp=" }],
-              [
-                { text: "📢 Channel", url: "https://t.me/RaseenRacing" },
-                { text: "💬 Community", url: "https://t.me/RaseenRacing_chat" }
-              ]
+              [{ text: "🚀 Open Bot", url: BOT_URL }],
+              [{ text: "📢 Withdrawals Channel", url: WITHDRAWAL_CHANNEL_URL }]
             ]
           }
         }
@@ -1303,7 +1283,7 @@ function startWelcomeBot() {
   bot.onText(/\/help/, async (msg) => {
     if (!isAdmin(msg)) return;
     await adminReply(bot, msg.chat.id,
-      `🐼 <b>RaseenRacing — لوحة الأدمن</b>\n` +
+      `🐼 <b>${BOT_NAME} — لوحة الأدمن</b>\n` +
       `${'═'.repeat(32)}\n\n` +
       `👋 <b>أساسي</b>\n` +
       `/start — رسالة الترحيب\n` +
@@ -1346,8 +1326,8 @@ function startWelcomeBot() {
       `/top_referrals — أفضل 50 مستخدم بأكثر إحالات إجمالاً\n` +
       `/top_deposited_referrals — أفضل 50 مستخدم بأكثر إحالات أودعوا\n\n` +
       `🔴 <b>تحكم كامل في النظام</b>\n` +
-      `/stop_all — ⛔ إيقاف الإيداع والسحب التلقائي بالكامل\n` +
-      `/start_all — ✅ تشغيل الإيداع والسحب مجدداً`
+      `/stop_all — ⛔ إيقاف السحب التلقائي بالكامل\n` +
+      `/start_all — ✅ تشغيل السحب مجدداً`
     );
   });
 
@@ -1355,7 +1335,7 @@ function startWelcomeBot() {
   bot.onText(/\/my/, async (msg) => {
     if (!isAdmin(msg)) return;
     await adminReply(bot, msg.chat.id,
-      `🎛 <b>RaseenRacing — لوحة التحكم الخاصة</b>\n` +
+      `🎛 <b>${BOT_NAME} — لوحة التحكم الخاصة</b>\n` +
       `${'═'.repeat(32)}\n\n` +
       `📊 <b>الإحصائيات والمراقبة</b>\n` +
       `/stats — إحصائيات كاملة\n\n` +
@@ -2252,39 +2232,34 @@ function startWelcomeBot() {
     setTimeout(() => processPendingWithdrawals(), 1000);
   });
 
-  // ─── /stop_all — إيقاف الإيداع والسحب بالكامل ──────────
+  // ─── /stop_all — إيقاف السحب بالكامل ──────────
   bot.onText(/\/stop_all/, async (msg) => {
     if (!isAdmin(msg)) { await unauth(msg); return; }
     systemPaused      = false; // نتركها false لأن stop_all أشمل
     WITHDRAWAL_ENABLED = false;
-    DEPOSIT_ENABLED    = false;
     systemPaused       = true;
     await adminReply(bot, msg.chat.id,
       `⛔ <b>تم إيقاف النظام بالكامل</b>\n\n` +
       `🚫 السحب التلقائي: <b>متوقف</b>\n` +
-      `🚫 فحص الإيداعات: <b>متوقف</b>\n` +
       `🚫 معالجة الطلبات: <b>متوقفة</b>\n\n` +
       `استخدم /start_all لإعادة التشغيل`
     );
     console.log("⛔ SYSTEM FULLY STOPPED by admin");
   });
 
-  // ─── /start_all — تشغيل الإيداع والسحب مجدداً ────────
+  // ─── /start_all — تشغيل السحب مجدداً ────────
   bot.onText(/\/start_all/, async (msg) => {
     if (!isAdmin(msg)) { await unauth(msg); return; }
     systemPaused       = false;
     WITHDRAWAL_ENABLED = true;
-    DEPOSIT_ENABLED    = true;
     await adminReply(bot, msg.chat.id,
       `✅ <b>تم تشغيل النظام بالكامل</b>\n\n` +
       `✅ السحب التلقائي: <b>يعمل</b>\n` +
-      `✅ فحص الإيداعات: <b>يعمل</b>\n` +
       `✅ معالجة الطلبات: <b>نشطة</b>\n\n` +
       `🔄 جاري بدء معالجة السحوبات المعلقة...`
     );
     console.log("✅ SYSTEM FULLY STARTED by admin");
     setTimeout(() => processPendingWithdrawals(), 1000);
-    setTimeout(() => checkDeposits(), 2000);
   });
 
   // ─── /process ─────────────────────────────────────────
@@ -3073,9 +3048,9 @@ setInterval(async () => {
 }, BATCH_FLUSH_SECONDS * 1000);
 
 // ==========================
-// 🔹 فحص الإيداعات كل 5 دقايق
+// 🔹 فحص الإيداعات — معطّل (البوت يدفع السحوبات فقط)
 // ==========================
-setInterval(() => checkDeposits(), 5 * 60 * 1000);
+// setInterval(() => checkDeposits(), 5 * 60 * 1000);
 
 // ==========================
 // 🔹 Start
@@ -3097,7 +3072,7 @@ getWallet().then(async () => {
   console.log(`💰 Wallet balance: ${b.toFixed(4)} TON`);
   if (WITHDRAWAL_ENABLED) await processPendingWithdrawals();
   else console.log("⛔ Withdrawal system disabled — skipping initial process");
-  await checkDeposits();
+  // فحص الإيداعات معطّل — البوت يدفع السحوبات فقط
 }).catch(err => { console.error("❌ Wallet error:", err.message); });
 
 setInterval(async () => {
@@ -3116,5 +3091,5 @@ db.ref("withdrawQueue").on("child_added", async (snap) => {
 
 db.ref(".info/connected").on("value", (snap) => { if (snap.val()) console.log("📡 Firebase connected"); });
 
-console.log("💸 Running | 📬 @PandaBambooPayouts | 👤 Admin:", ADMIN_CHAT_ID);
+console.log(`💸 Running | 📬 ${WITHDRAWAL_CHANNEL_ID} | 👤 Admin:`, ADMIN_CHAT_ID);
 console.log("=".repeat(50) + "\n");
