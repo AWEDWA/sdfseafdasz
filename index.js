@@ -607,80 +607,9 @@ async function validateWithdrawal(withdrawId, data) {
     return { valid: false, skip: false };
   }
 
-  // فحص الإيداعات الموحد — يغطي كل الحالات
-  if (userId && !data.approvedByAdmin) {
-    try {
-      const [depositsSnap, paidWdSnap] = await Promise.all([
-        db.ref(`users/${userId}/deposits`).once("value"),
-        db.ref("withdrawQueue").orderByChild("userId").equalTo(userId).once("value"),
-      ]);
-
-      const depositsData    = depositsSnap.val() || {};
-      const confirmedDeps   = Object.values(depositsData).filter(d => !d.status || d.status !== 'pending');
-      const totalDepositTon = confirmedDeps.reduce((s, d) => s + (Number(d.amount) || 0), 0);
-
-      const paidWdData   = paidWdSnap.val() || {};
-      const totalPaidTon = Object.values(paidWdData)
-        .filter(d => d.status === 'paid')
-        .reduce((s, d) => s + roundAmount(d.ton), 0);
-
-      const projectedTotal = totalPaidTon + roundedAmount;
-
-      console.log(`🔍 Deposit check [${userId}]: deposited=${totalDepositTon.toFixed(3)} paidSoFar=${totalPaidTon.toFixed(3)} thisWd=${roundedAmount} projected=${projectedTotal.toFixed(3)}`);
-
-      if (projectedTotal > totalDepositTon) {
-        if (totalDepositTon === 0 && roundedAmount <= 0.1) {
-          console.log(`✅ Free user withdrawal allowed (≤0.1 TON): user ${userId} | ${roundedAmount} TON`);
-        } else {
-        await db.ref(`withdrawQueue/${withdrawId}`).update({
-          status:    "awaiting_approval",
-          updatedAt: Date.now(),
-          holdReason: `السحوبات (${projectedTotal.toFixed(3)} TON) تتجاوز الإيداعات (${totalDepositTon.toFixed(3)} TON)`,
-        });
-
-        const zeroDeposit = totalDepositTon === 0;
-        const requestTime = new Date(data.ts || Date.now()).toLocaleString('en-GB', { timeZone: 'UTC', hour12: false });
-        const warningText =
-          `⚠️ <b>سحب يحتاج موافقة — ${zeroDeposit ? '🚨 لا يوجد إيداع' : 'تجاوز الإيداعات'}</b>\n\n` +
-          `👤 User: <code>${userId}</code>\n` +
-          `━━━━━━━━━━━━━━━━\n` +
-          `🆔 ID: <code>${withdrawId}</code>\n` +
-          `💰 المبلغ: <b>${roundedAmount} TON</b>\n` +
-          `📥 إجمالي الإيداعات: <b>${zeroDeposit ? '❌ لا يوجد' : totalDepositTon.toFixed(3) + ' TON'}</b>\n` +
-          `📤 سحوبات مدفوعة سابقاً: <b>${totalPaidTon.toFixed(3)} TON</b>\n` +
-          `📊 الإجمالي بعد الدفع: <b>${projectedTotal.toFixed(3)} TON</b>\n` +
-          `📬 المحفظة:\n<code>${data.address}</code>\n` +
-          `🕐 الوقت: ${requestTime} UTC\n` +
-          `━━━━━━━━━━━━━━━━\n\n` +
-          (zeroDeposit ? `🚨 المستخدم لم يودع أي مبلغ! هل توافق؟` : `⚠️ السحوبات ستتجاوز الإيداعات! هل توافق؟`);
-
-        const botToken = process.env.TELEGRAM_BOT_TOKEN;
-        if (botToken) {
-          const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id:      ADMIN_CHAT_ID,
-              text:         warningText,
-              parse_mode:   'HTML',
-              reply_markup: {
-                inline_keyboard: [[
-                  { text: "✅ موافقة — ادفع الآن", callback_data: `approve_wd:${withdrawId}` },
-                  { text: "❌ رفض — إلغاء",        callback_data: `reject_wd:${withdrawId}`  },
-                ]]
-              }
-            }),
-          });
-          const resData = await res.json();
-          if (resData.ok) console.log(`📨 Deposit alert sent for ${withdrawId}`);
-          else console.log(`❌ Deposit alert failed: ${JSON.stringify(resData)}`);
-        }
-        return { valid: false, skip: false };
-        }
-      }
-      console.log(`✅ Deposit check passed for ${userId}`);
-    } catch (e) { console.log(`⚠️ Deposit check error: ${e.message}`); }
-  }
+  // فحص الإيداعات — تم إلغاؤه بالكامل: المستخدم بدون إيداع ("مجاني") يُعامل
+  // بنفس قواعد السحب العامة اللي بتنطبق على أي مستخدم تاني (Max/Min/Daily limit)
+  // بدون أي سقف إضافي أو حاجة لموافقة يدوية بسبب عدم وجود إيداع.
 
   if (userId && !data.approvedByAdmin) {
     const dailyCount = await getUserDailyWithdrawalCount(userId);
